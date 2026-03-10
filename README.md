@@ -10,11 +10,8 @@ The database allows efficient tracking of book availability, issuing, and return
 ### The system helps libraries maintain structured records of:
 
 1 Books and their details
-
 2 Members who borrow books
-
 3 Employees managing operations
-
 4 Issued and returned books
 
 ### Database Structure
