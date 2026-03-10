@@ -134,6 +134,7 @@ Potential enhancements for this system:
 
 
 ### Here are 5 powerful SQL insights
+```sql
 --Most Borrowed Books
 This query finds which books are issued the most.
 
@@ -202,9 +203,11 @@ FROM books
 GROUP BY category
 ORDER BY total_books DESC;
 
+
 Insight:
 Shows library collection distribution
 Helps decide which genres need more books
+```
 --
 👤 Author
 ash15verma
