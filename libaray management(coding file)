@@ -1,0 +1,265 @@
+--Libary management project of oracle(sql):
+--1st table is Branch
+--branch_id	manager_id	branch_address	contact_no(list of columns in a table):
+--first step:we need to create a test table to get the data from csv to sql in a char datatypes.
+CREATE TABLE BRANCH_TEST(
+branch_id CHAR(15),
+manager_id  CHAR(20),
+branch_address CHAR(20),
+contact_no CHAR(15));
+
+select *from branch_test
+
+--2nd stpe:later, need to create a ctl file, where, data needs to be transfered from csv to ctl file.
+--3rd step:-after transferring data into ctl file, we need to create a schema of branch table with real datatypes.
+CREATE TABLE BRANCH(
+BRANCH_ID NUMBER(15) PRIMARY KEY,
+MANAGER_ID  VARCHAR2(20),
+BRANCH_ADDRESS VARCHAR2(20),
+CONTACT_NO VARCHAR2(15));
+
+SELECT *FROM BRANCH
+desc branch;
+--4th step:-create a cmd file to transferred data from ctl file to a test table.
+--5th step:-use cursor to tranferred the records from test table to the real table.
+
+SET SERVEROUTPUT ON
+DECLARE
+CURSOR C1 IS
+SELECT branch_id, manager_id, branch_address, contact_no
+from BRANCH_TEST;
+BEGIN
+FOR REC IN C1 LOOP 
+INSERT INTO BRANCH
+(branch_id,manager_id,branch_address, contact_no)
+values
+(rec.branch_id,rec.manager_id,rec.branch_address, rec.contact_no);
+end loop;
+commit;
+end;
+--table creation done with records.
+
+--------------------------------------------------------EMPLOYEE TABLE---------------------------------------------------------
+--emp_id	emp_name	position	salary	branch_id
+CREATE TABLE EMPLOYEES_TEST(
+emp_id char(20),
+emp_name char(25),
+position char(30),
+sal char(15),
+branch_id char(30));
+
+select *from employees_test;
+select *from employees;
+
+CREATE TABLE EMPLOYEES(
+emp_id varchar2(20),
+emp_name varchar2(25),
+position varchar2(30),
+sal number(15),
+branch_id varchar2(30));
+
+select *from employees;
+
+DECLARE
+CURSOR C2 IS
+SELECT emp_id,emp_name,position,salary,branch_id
+from EMPLOYEES_TEST;
+BEGIN
+FOR REC IN C3 LOOP 
+INSERT INTO EMPLOYEES
+(emp_id,emp_name,position,salary,branch_id)
+values
+(REC.emp_id,REC.emp_name,REC.position,REC.salary,REC.branch_id);
+end loop;
+commit;
+end;
+--------------------------------------------------------error solving------------------------------------------------------------------------
+--While establishing the relationship between primary key(branch) and foreign key(employees), the statement was not executing, so in that case--
+--I have taken following steps:-
+-->To see whether the lenth of a characters are withing the datatypes or not.
+-->later on, I had checked, that, we have a some internal unwanted values in the primary key columns records. so I had deleted these values with the help of TRIM function.
+-->thats how, I managed to established referntial integrity.
+
+--to check the length
+select length(branch_id) from branch  --intially it was showing  50 length.
+--synatx of triming the characters.
+update branch
+set branch_id=trim(branch_id);
+
+-----------------------------------------------------------BOOK TABLE----------------------------------------------------------------------------------
+create table book_test(
+isbn char(50), 
+book_title char(100)
+category char(50),
+rental_price char(10),
+status char(50),
+author char(50),
+publisher char(50));
+
+select *from book_test
+
+create table book(
+isbn varchar2(50), 
+book_title varchar2(100),
+category varchar2(50),
+rental_price varchar2(10),
+status varchar2(50),
+author varchar2(50),
+publisher varchar2(50));
+
+select *from user_constraints
+where table_name='BOOK';
+
+SET SERVEROUTPUT ON
+DECLARE
+CURSOR C3 IS
+SELECT isbn, book_title,category,rental_price,status,author,publisher
+from BOOK_TEST;
+BEGIN
+FOR REC IN C3 LOOP 
+INSERT INTO BOOK
+(isbn, book_title,category,rental_price,status,author,publisher)
+values
+(rec.isbn, rec.book_title,rec.category,rec.rental_price,rec.status,rec.author,rec.publisher);
+end loop;
+commit;
+end;
+----------------------------------------------------MEMBERS---------------------------------------------------------------
+create table members_test(
+member_id char(50),
+member_name char(50),
+member_address char(50),
+reg_date char(50));
+
+create table members(
+member_id varchar(50) primary key,
+member_name varchar(50),
+member_address varchar(50),
+reg_date varchar(50));
+
+
+DECLARE
+CURSOR C4 IS
+SELECT member_id,member_name,member_address,reg_date
+from members_test ;
+BEGIN
+FOR REC IN C4 LOOP 
+INSERT INTO members
+(member_id,member_name,member_address,reg_date)
+values
+(rec.member_id,rec.member_name,rec.member_address,TO_DATE(rec.reg_date, 'MM-DD-YY'));
+end loop;
+commit;
+end;
+
+--ERROR--change the date datatype of a table.
+--firstly, SELECT value
+FROM nls_session_parameters
+WHERE parameter = 'NLS_DATE_FORMAT';--to find out the what date format has been installed in a system.
+
+alter session set nls_date_format='DD-MM-YYYY';   --VERY IMPORTANT TO CHECK WHILE CHANGING THE DATE FORMAT.
+
+ALTER TABLE members 
+ADD reg_date_dt DATE; --first to create dublicate column.
+
+UPDATE members
+SET reg_date_dt = TO_DATE(reg_date,'YYYY-MM-DD'); --to transgereed the data from 1 column to another one.
+
+COMMIT;
+
+ALTER TABLE members 
+DROP COLUMN reg_date; --to drop existing column.
+
+ALTER TABLE members  
+RENAME COLUMN reg_date_dt TO reg_date; --rename the new column as per droped column named.
+
+----------------------------------------------------RETURN STATUS----------------------------------------------------------------------------
+create table return_status(
+return_id varchar2(100),
+issued_id varchar2(100),
+return_book_name varchar2(100),
+return_date date,
+return_book_isbn varchar2(50));
+
+--to apply foreign key here which is a primary key in books table.
+alter table return_status
+add constraint return_status_isbn
+foreign key(isbn) references book(isbn);
+
+--error--to remove any not null values from a column
+--while, I was facing a issue to established a link between pk and fk.
+--so, in that case, I have come across, that, there are some unwanted values exists in a null values in fk key column, but could'nt recongsied what is the real issue.
+--so I replaced, null values with the unwanted values.
+
+--syntax to resolving this type of error--
+UPDATE return_status
+SET isbn = NULL
+WHERE isbn IS NOT NULL
+AND isbn NOT IN (SELECT isbn FROM book);
+------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------issued status table.----------------------------------------------------------
+
+create table issued_status_test(
+issued_id char(100),
+issued_member_id char(50),
+issued_book_name char(100),
+issued_date char(100),
+issued_book_isbn char(50),
+issued_emp_id char(20));
+
+
+create table issued_status(
+issued_id varchar2(100),
+issued_member_id varchar2(50),
+issued_book_name varchar2(100),
+issued_date varchar2(100),
+issued_book_isbn varchar2(50),
+issued_emp_id varchar2(20));
+
+DECLARE
+CURSOR C5 IS
+SELECT issued_id,issued_member_id,issued_book_name,issued_date,issued_book_isbn,issued_emp_id
+from issued_status_test;
+BEGIN
+FOR REC IN C5 LOOP 
+INSERT INTO issued_status
+(issued_id,issued_member_id,issued_book_name,issued_date,issued_book_isbn,issued_emp_id)
+values
+(rec.issued_id,rec.issued_member_id,rec.issued_book_name,rec.issued_date,rec.issued_book_isbn,rec.issued_emp_id);
+end loop;
+commit;
+end;
+
+
+--to add 1st foreign key in issued_status table.
+alter table issued_status
+add constraint issued_member_id
+foreign key(issued_member_id)
+references members(member_id);
+
+--to add 2nd foreign key in issued_status table
+alter table issued_status
+add constraint issued_book_isbn
+foreign key(issued_book_isbn)
+references book(isbn);
+
+--to add 3rd foreign key in issued_status table.
+alter table issued_status
+add constraint issued_emp_id
+foreign key(issued_emp_id)
+references employees(emp_id);
+
+
+commit
+
+
+
+
+
+
+
+
+
+
+

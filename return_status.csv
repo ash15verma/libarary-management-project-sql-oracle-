@@ -1,0 +1,15 @@
+LOAD DATA 
+infile "C:\libary management system project\return_status.csv" 
+INTO TABLE return_status_test --Data will be inserted into the BRANCH_TEST table.
+WHEN (return_id != 'return_id')
+FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+TRAILING NULLCOLS
+(
+  return_id,
+issued_id,
+return_book_name,
+return_date,
+return_book_isbn
+)
+
